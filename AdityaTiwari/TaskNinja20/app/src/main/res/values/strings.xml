@@ -18,4 +18,8 @@
     <string name="high">High</string>
     <string name="medium">Medium</string>
     <string name="low">Low</string>
+    <string name="task_category">Task Category</string>
+    <string name="work">Work</string>
+    <string name="personal">Personal</string>
+    <string name="urgent">Urgent</string>
 </resources>

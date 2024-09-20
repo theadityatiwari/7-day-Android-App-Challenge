@@ -1,5 +1,6 @@
 package com.example.taskninja20.view.screens
 
+import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,24 +10,47 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.taskninja20.R
+import com.example.taskninja20.data.database.TaskDatabase
+import com.example.taskninja20.data.model.Task
+import com.example.taskninja20.data.repository.TaskRepository
 import com.example.taskninja20.reusable.CustomTextBold
+import com.example.taskninja20.viewmodel.TaskViewModel
+import com.example.taskninja20.viewmodel.TaskViewModelFactory
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddTaskScreen() {
+fun AddTaskScreen(navController: NavHostController) {
     var taskTitle by remember { mutableStateOf("") }
     var taskDescription by remember { mutableStateOf(TextFieldValue("")) }
     var selectedDate by remember { mutableStateOf("Select Deadline Date") }
-    var taskStatus by remember { mutableStateOf("In-Progress") }
+    var taskStatus by remember { mutableStateOf("Pending") }
     var taskPriority by remember { mutableStateOf("Low") }
+    var taskCategory by remember { mutableStateOf("Work") }
     var showDatePicker by remember { mutableStateOf(false) }
 
+    val datePickerState = rememberDatePickerState()
+    val formattedDate = datePickerState.selectedDateMillis?.let {
+        convertMillisToDate(it)
+    } ?: selectedDate
+
+    val context = LocalContext.current
+    val database = TaskDatabase.getInstance(context)
+    val repository = TaskRepository(database.getTaskDao())
+    val viewModel: TaskViewModel = viewModel(
+        factory = TaskViewModelFactory(repository)
+    )
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -38,11 +62,10 @@ fun AddTaskScreen() {
                     .width(1.dp)
                     .weight(.05f)
             )
-            Box( modifier = Modifier.weight(.9f)){
+            Box(modifier = Modifier.weight(.9f)) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background)
                 ) {
                     // Task Title
                     Spacer(modifier = Modifier.height(16.dp))
@@ -66,24 +89,39 @@ fun AddTaskScreen() {
 
                     // Select Deadline Date
                     OutlinedTextField(
-                        value = selectedDate,
-                        onValueChange = { selectedDate = it },
+                        value = formattedDate,
+                        onValueChange = { },
                         modifier = Modifier.fillMaxWidth(),
                         trailingIcon = {
-                            IconButton(onClick = { showDatePicker = true }) {
-                                Icon(Icons.Default.DateRange, contentDescription = stringResource(id = R.string.select_date))
+                            IconButton(onClick = { showDatePicker = !showDatePicker }) {
+                                Icon(
+                                    Icons.Default.DateRange,
+                                    contentDescription = stringResource(id = R.string.select_date)
+                                )
                             }
-                        }
+                        },
+                        readOnly = true
                     )
 
                     if (showDatePicker) {
-                        DatePickerDialog(
-                            onDateSelected = { date ->
-                                selectedDate = date.toString() // Format this as needed
-                                showDatePicker = false
-                            },
-                            onDismissRequest = { showDatePicker = false }
-                        )
+                        Popup(
+                            onDismissRequest = { showDatePicker = false },
+                            alignment = Alignment.TopStart
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .offset(y = 64.dp)
+                                    .shadow(elevation = 4.dp)
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .padding(16.dp)
+                            ) {
+                                DatePicker(
+                                    state = datePickerState,
+                                    showModeToggle = false,
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -91,13 +129,17 @@ fun AddTaskScreen() {
                     // Task Status (Dropdown)
                     DropdownMenuField(
                         label = stringResource(id = R.string.task_status),
-                        options = listOf(stringResource(id = R.string.in_progress), stringResource(
-                            id = R.string.pending
-                        ), stringResource(
-                            id = R.string.cancelled
-                        ), stringResource(
-                            id = R.string.completed
-                        )),
+                        options = listOf(
+                            stringResource(
+                                id = R.string.pending
+                            ), stringResource(
+                                id = R.string.in_progress
+                            ), stringResource(
+                                id = R.string.completed
+                            ), stringResource(
+                                id = R.string.cancelled
+                            )
+                        ),
                         selectedOption = taskStatus,
                         onOptionSelected = { taskStatus = it }
                     )
@@ -107,14 +149,41 @@ fun AddTaskScreen() {
                     // Task Priority (Dropdown)
                     DropdownMenuField(
                         label = stringResource(id = R.string.task_priority),
-                        options = listOf(stringResource(
-                            id = R.string.high
-                        ), stringResource(
-                            id = R.string.medium
-                        ), stringResource(id = R.string.low)),
+                        options = listOf(
+                            stringResource(
+                                id = R.string.low
+                            ),
+                            stringResource(
+                                id = R.string.medium
+                            ),
+                            stringResource(
+                                id = R.string.high
+                            )
+                        ),
                         selectedOption = taskPriority,
                         onOptionSelected = { taskPriority = it }
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Task Category (Dropdown)
+                    DropdownMenuField(
+                        label = stringResource(id = R.string.task_category),
+                        options = listOf(
+                            stringResource(
+                                id = R.string.work
+                            ),
+                            stringResource(
+                                id = R.string.personal
+                            ),
+                            stringResource(
+                                id = R.string.urgent
+                            )
+                        ),
+                        selectedOption = taskCategory,
+                        onOptionSelected = { taskCategory = it }
+                    )
+
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -133,7 +202,34 @@ fun AddTaskScreen() {
                     // Add Task Button
                     AddTaskButton(modifier = Modifier
                         .height(50.dp)
-                        .fillMaxWidth())
+                        .fillMaxWidth(), onClick = {
+                        val task = Task(
+                            taskTitle = taskTitle,
+                            taskDescription = taskDescription.text,
+                            taskStatus = when (taskStatus) {
+                                "Pending" -> 1
+                                "In-Progress" -> 2
+                                "Completed" -> 3
+                                "Cancelled" -> 4
+                                else -> 1
+                            },
+                            priority = when (taskPriority) {
+                                "Low" -> 1
+                                "Medium" -> 2
+                                "High" -> 3
+                                else -> 1
+                            },
+                            taskCategory = when (taskCategory) {
+                                "Work" -> 1
+                                "Personal" -> 2
+                                "Urgent" -> 3
+                                else -> 1
+                            }
+                        )
+                        viewModel.insertTask(task)
+                        navController.popBackStack()
+                    }
+                    )
 
                 }
             }
@@ -149,9 +245,9 @@ fun AddTaskScreen() {
 }
 
 @Composable
-fun AddTaskButton(modifier: Modifier){
+fun AddTaskButton(modifier: Modifier, onClick: () -> Unit) {
     Button(
-        onClick = { /* Handle Add Task Action */ },
+        onClick = { onClick() },
         modifier = modifier
     ) {
         Text(stringResource(id = R.string.add_task), fontSize = 18.sp)
@@ -193,19 +289,12 @@ fun DropdownMenuField(
     }
 }
 
-@Composable
-fun DatePickerDialog(
-    onDateSelected: (Date) -> Unit,
-    onDismissRequest: () -> Unit
-) {
-    // Implementation of date picker dialog using Material Date Picker or any custom implementation
-    // Placeholder function
-    onDateSelected(Date())
-    onDismissRequest()
+fun convertMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    return formatter.format(Date(millis))
 }
 
 @Preview(showBackground = true)
 @Composable
 fun AddTaskScreenPreview() {
-    AddTaskScreen()
 }

@@ -15,15 +15,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.taskninja20.model.CategoryItem
+import com.example.taskninja20.data.model.CategoryItem
 
 @Composable
 fun CategoryGridScreen() {
 
     // Data for items
     val categories = listOf(
-        CategoryItem("In-Progress", Icons.Filled.PlayArrow, 5, Color(0xFF2196F3)), // Blue
         CategoryItem("Pending", Icons.Filled.Settings, 3, Color(0xFFFF9800)), // Orange
+        CategoryItem("In-Progress", Icons.Filled.PlayArrow, 5, Color(0xFF2196F3)), // Blue
         CategoryItem("Completed", Icons.Filled.CheckCircle, 8, Color(0xFF4CAF50)), // Green
         CategoryItem("Cancelled", Icons.Filled.Close, 2, Color(0xFFF44336)) // Red
     )
@@ -39,7 +39,7 @@ fun CategoryGridScreen() {
                 modifier = Modifier
                     .padding(8.dp)
                     .background(color = categories[index].color, MaterialTheme.shapes.medium)
-                    .height(200.dp)
+                    .height(170.dp)
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {

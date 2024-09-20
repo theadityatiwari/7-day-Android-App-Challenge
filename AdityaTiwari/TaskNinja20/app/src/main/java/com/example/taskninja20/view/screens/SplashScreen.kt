@@ -22,12 +22,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.taskninja20.reusable.CustomTextBold
 import androidx.compose.animation.core.Animatable
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,16 +30,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NavHostController
+import com.example.taskninja20.data.model.Screen
 
 @Composable
-fun SplashScreen() {
+fun SplashScreen(navController: NavHostController) {
     val alpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
         delay(1000)
         alpha.animateTo(1f, animationSpec = tween(1500))
+        navController.navigate(Screen.Home.route) {
+            popUpTo(Screen.Splash.route) { inclusive = true }
+            launchSingleTop = true
+        }
     }
-    Surface {
+    Surface{
         Box(
             modifier = Modifier
                 .fillMaxSize(), contentAlignment = Alignment.Center

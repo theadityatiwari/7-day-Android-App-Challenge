@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id ("kotlin-kapt") // Add this line
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -60,7 +62,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation ("androidx.navigation:navigation-compose:2.7.7") // or the latest version
     implementation(libs.androidx.material3)
-    implementation ("androidx.compose.material3:material3:1.2.1")
+    implementation ("androidx.compose.material3:material3:1.3.0")
+    implementation(libs.androidx.runtime.livedata)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -69,4 +72,37 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation ("androidx.compose.ui:ui:1.6.8")
+
+
+    //Room
+    val room_version = "2.6.1" // Use the latest version
+    implementation (libs.androidx.room.runtime)
+    implementation ("androidx.room:room-ktx:2.6.1")
+    annotationProcessor (libs.androidx.room.compiler)
+
+    // To use Kotlin annotation processing tool (kapt)
+    kapt("androidx.room:room-compiler:$room_version")
+
+
+    //Lifecyle ViewModel LiveData
+    val lifecycle_version = "2.8.4"
+    // ViewModel
+    implementation (libs.androidx.lifecycle.viewmodel.ktx)
+    implementation (libs.androidx.lifecycle.livedata.ktx)
+    implementation (libs.androidx.lifecycle.runtime.ktx)
+
+
+    //Kotlin Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0-RC")
+
+    //Hilt
+    implementation("com.google.dagger:hilt-android:2.44")
+    kapt("com.google.dagger:hilt-android-compiler:2.44")
+
+    //Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
 }
